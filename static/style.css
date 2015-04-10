@@ -1,0 +1,20 @@
+th[data-sort]{
+  cursor:pointer;
+}
+
+tr[data-href]{
+  cursor:pointer;
+}
+
+th {
+  text-align: center;
+}
+
+/* Custom container */
+.container-fixed {
+  margin: 0 auto;
+  max-width: 960px;
+}
+.container-fixed > hr {
+  margin: 30px 0;
+}

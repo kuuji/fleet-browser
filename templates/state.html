@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="container">
+  <h1>State</h1>
+  <table class="table table-condensed">
+    <thead>
+      <tr>
+        <th data-sort="string">UNIT</th>
+        <th data-sort="string">MACHINE</th>
+        <th data-sort="string">ACTIVE</th>
+        <th data-sort="string">SUB</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for unit in states %}
+
+      {% if unit.systemdActiveState == "active" %}
+        <tr data-href="/units/{{ unit.name }}" class="success">
+      {% elif unit.systemdActiveState == "failed" %}
+        <tr data-href="/units/{{ unit.name }}" class="danger">
+      {% elif unit.systemdActiveState == "inactive" %}
+        <tr data-href="/units/{{ unit.name }}" class="warning">
+      {% elif unit.systemdActiveState == "loaded" %}
+        <tr data-href="/units/{{ unit.name }}" class="active">
+      {% else %}
+        <tr data-href="/units/{{ unit.name }}">
+      {% endif %}
+
+        <td>{{ unit.name }}</td>
+        <td>{{ unit.machineID }}</td>
+        <td>{{ unit.systemdActiveState }}</td>
+        <td>{{ unit.systemdSubState }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+$(function() {
+  $("table").stupidtable();
+  $('tr[data-href]').on("click", function() {
+    document.location = $(this).data('href');
+  });
+});
+</script>
+{% endblock %}

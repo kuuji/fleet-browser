@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="container">
+  <h2>{{ unit.name }}</h2>
+  <pre>{{ unit }}</pre>
+</div>
+
+<script>
+$(function() {
+  $("table").stupidtable();
+});
+</script>
+{% endblock %}
