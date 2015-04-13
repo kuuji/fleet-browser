@@ -2,7 +2,6 @@
 {% block body %}
 
 <div class="container">
-  <h1>Machines</h1>
   <table class="table table-condensed">
     <thead>
       <tr>
@@ -24,6 +23,7 @@
 <script>
 $(function() {
   $("table").stupidtable();
+  $('#machines').attr("class", "active");
 });
 </script>
 {% endblock %}

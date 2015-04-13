@@ -2,7 +2,6 @@
 {% block body %}
 
 <div class="container">
-  <h1>State</h1>
   <table class="table table-condensed">
     <thead>
       <tr>
@@ -43,6 +42,7 @@ $(function() {
   $('tr[data-href]').on("click", function() {
     document.location = $(this).data('href');
   });
+  $('#state').attr("class", "active");
 });
 </script>
 {% endblock %}
