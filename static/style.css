@@ -15,6 +15,20 @@ th {
   margin: 0 auto;
   max-width: 960px;
 }
+
 .container-fixed > hr {
   margin: 30px 0;
+}
+
+.jumbotron {
+  background-color: #f4f4f4;
+}
+
+pre {
+  text-align: left;
+  white-space: pre-line;
+}
+
+#id {
+  width : 15%;
 }
