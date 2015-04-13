@@ -3,12 +3,110 @@
 
 <div class="container">
   <h2>{{ unit.name }}</h2>
-  <pre>{{ unit }}</pre>
+  <pre>{{ unit.service }}</pre>
+  {% if '@.service' in unit.name %}
+
+  <button type="submit" href="#newService" class="btn btn-primary pull-right" data-toggle="modal">New</button>
+
+  <div id="newService" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h4 class="modal-title">Modal title</h4>
+        </div>
+          <div class="modal-body">
+                <p style="text-align: left;">Service name: {{ unit.name.split('@.')[0] + '@' }}<input class="form-control" id="id"></p>
+          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-success pull-right" id="btnLaunch">Launch</button>
+          <button type="submit" class="btn btn-primary pull-right" id="btnLoad">Load</button>
+          <button type="submit" class="btn btn-info pull-right" id="btnSubmit">Submit</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+  {% endif %}
 </div>
 
 <script>
 $(function() {
   $("table").stupidtable();
+  $('#units').attr("class", "active");
+
+  $('#btnLaunch').on("click", function(){
+      var id = $('#id').val();
+      var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+
+      var data = "{{ unit.json }}"
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#0*34;/g, '"')
+            .replace(/&#0*39;/g, "'");
+
+      var json_data = JSON.parse(data);
+      json_data.desiredState = 'launched';
+      data = JSON.stringify(json_data);
+
+      $.ajax({
+      url: '/units/' + name,
+      type: 'PUT',
+      success: function (){console.log('success')},
+      data: {'text': data},
+    });
+
+    $('#newService').modal('hide');
+  });
+
+  $('#btnLoad').on("click", function(){
+    var id = $('#id').val();
+    var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+
+    var data = "{{ unit.json }}"
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&#0*34;/g, '"')
+          .replace(/&#0*39;/g, "'");
+
+    var json_data = JSON.parse(data);
+    json_data.desiredState = 'loaded';
+    data = JSON.stringify(json_data);
+
+    $.ajax({
+    url: '/units/' + name,
+    type: 'PUT',
+    success: function (){console.log('success')},
+    data: {'text': data},
+    });
+
+    $('#newService').modal('hide');
+  });
+
+  $('#btnSubmit').on("click", function(){
+    var id = $('#id').val();
+    var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+
+    var data = "{{ unit.json }}"
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&#0*34;/g, '"')
+          .replace(/&#0*39;/g, "'");
+
+    var json_data = JSON.parse(data);
+    json_data.desiredState = 'inactive';
+    data = JSON.stringify(json_data);
+
+    $.ajax({
+    url: '/units/' + name,
+    type: 'PUT',
+    success: function (){console.log('success')},
+    data: {'text': data},
+    });
+
+    $('#newService').modal('hide');
+  });
+
 });
 </script>
 {% endblock %}
