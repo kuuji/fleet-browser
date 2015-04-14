@@ -1,6 +1,8 @@
 # Fleet Browser
 
-Fleet API client running in the web. For now it has view (GET) capabilities.
+[Fleet API](https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md) client running in the web.
+
+For now it has view capabilities + plus the ability to put units from existing templates.
 
 ## Usage
 
