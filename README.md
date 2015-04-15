@@ -4,14 +4,27 @@
 
 For now it has view capabilities + plus the ability to put units from existing templates.
 
-## Usage
+## Requirements
 
-You need to set a environment variable called `FLEET_ENDPOINT` which points to your
+You need to have python installed and Flask. If you use pip, you can install Flask
+with command
+
+```
+pip install Flask
+```
+
+You also need to set a environment variable called `FLEET_ENDPOINT` which points to your
 Fleet API:
 
 ```
 export FLEET_ENDPOINT=172.17.8.101:8080
+```
+
+## Usage
+
+Just run
+```
 python app.py
 ```
 
-It should be up in `http://localhost:5000`.
+The server should be up in `http://localhost:5000`.
