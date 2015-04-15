@@ -61,7 +61,7 @@ $(function() {
     $.ajax({
       url: '/units/' + name,
       type: 'PUT',
-      success: function () {alert('Sucessful API call.')},
+      success: function () {document.location.href = '/units';},
       error: function () {alert('Error on API call. Verify your service file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'launched'}
     });
@@ -82,7 +82,7 @@ $(function() {
     $.ajax({
       url: '/units/' + name,
       type: 'PUT',
-      success: function () {alert('Sucessful API call.')},
+      success: function () {document.location.href = '/units';},
       error: function () {alert('Error on API call. Verify your service file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'loaded'}
     });
@@ -102,7 +102,7 @@ $(function() {
     $.ajax({
       url: '/units/' + name,
       type: 'PUT',
-      success: function () {alert('Sucessful API call.')},
+      success: function () {document.location.href = '/units';},
       error: function () {alert('Error on API call. Verify your service file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'inactive'}
     });
@@ -116,10 +116,7 @@ $(function() {
     $.ajax({
       url: '/units/' + name,
       type: 'DELETE',
-      success: function () {
-        alert('Sucessful API call.');
-        document.location.href = '/units';
-      },
+      success: function () {document.location.href = '/units';},
       error: function () {alert('Error on API call. Verify your service file.')}
     });
   });
