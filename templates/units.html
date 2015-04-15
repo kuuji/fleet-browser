@@ -32,6 +32,37 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <button type="submit" href="#newServiceFile" class="btn btn-primary pull-right" data-toggle="modal">New</button>
+
+  <div id="newServiceFile" class="modal fade">
+    <div class="modal-dialog" id="newServiceFileDialog">
+      <div class="modal-content" id="newServiceFileContent">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h4 class="modal-title">Create new service file</h4>
+        </div>
+          <div class="modal-body" id="newServiceFileBody">
+            <form  class="form-left" role="form">
+              <div class="form-group">
+                <label for="service-name">Name:</label>
+                <input class="form-control" id="service-name">
+              </div>
+              <div class="form-group">
+                <label for="service-file">Content:</label>
+                <textarea class="form-control" rows="16" id="service-file" ></textarea>
+              </div>
+            </form>
+          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-success pull-right" id="btnLaunch">Launch</button>
+          <button type="submit" class="btn btn-primary pull-right" id="btnLoad">Load</button>
+          <button type="submit" class="btn btn-info pull-right" id="btnSubmit">Submit</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 </div>
 
 <script>
@@ -42,6 +73,52 @@ $(function() {
   });
 
   $('#units').attr("class", "active");
+
+  $('#btnLaunch').on("click", function(){
+    var name = $("#service-name").val();
+    var serviceFile = $("#service-file").val();
+
+    $.ajax({
+      url: '/units/' + name,
+      type: 'PUT',
+      success: function () {alert('Sucessful API call.')},
+      error: function () {alert('Error on API call. Verify your service file.')},
+      data: {'serviceFile': serviceFile, 'desiredState': 'launched'}
+    });
+
+    $('#newServiceFile').modal('hide');
+  });
+
+  $('#btnLoad').on("click", function(){
+    var name = $("#service-name").val();
+    var serviceFile = $("#service-file").val();
+    console.log(serviceFile)
+
+    $.ajax({
+      url: '/units/' + name,
+      type: 'PUT',
+      success: function () {alert('Sucessful API call.')},
+      error: function () {alert('Error on API call. Verify your service file.')},
+      data: {'serviceFile': serviceFile, 'desiredState': 'loaded'}
+    });
+
+    $('#newServiceFile').modal('hide');
+  });
+
+  $('#btnSubmit').on("click", function(){
+    var name = $("#service-name").val();
+    var serviceFile = $("#service-file").val();
+
+    $.ajax({
+      url: '/units/' + name,
+      type: 'PUT',
+      success: function () {alert('Sucessful API call.')},
+      error: function () {alert('Error on API call. Verify your service file.')},
+      data: {'serviceFile': serviceFile, 'desiredState': 'inactive'}
+    });
+
+    $('#newServiceFile').modal('hide');
+  });
 
 });
 </script>
