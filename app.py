@@ -35,8 +35,6 @@ def handle_unit(name):
         for option in data['options']:
             sections[option['section']] = ''
         for option in data['options']:
-            if option['name'] == 'ExecStart':
-                print "%s" % option['value'].replace('"', '\\"')
             sections[option['section']] += '%s: %s\n' % (option['name'], option['value'])
         for section in reversed(sections.keys()):
             unit['service'] += '[%s]\n%s' % (section, sections[section])
