@@ -5,18 +5,25 @@
   <h2>{{ unit.name }}</h2>
   <pre>{{ unit.service }}</pre>
   {% if '@.service' in unit.name %}
-
-  <button type="submit" href="#newService" class="btn btn-primary pull-right" data-toggle="modal">New</button>
+  <div class="btn-toolbar">
+    <button type="submit" href="#newService" class="btn btn-primary pull-right" data-toggle="modal">New</button>
+    <button type="submit" class="btn btn-danger pull-right" id="btnDestroy">Destroy</button>
+  </div>
 
   <div id="newService" class="modal fade">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-          <h4 class="modal-title">Modal title</h4>
+          <h4 class="modal-title">Create service file from template</h4>
         </div>
           <div class="modal-body">
-                <p style="text-align: left;">Service name: {{ unit.name.split('@.')[0] + '@' }}<input class="form-control" id="id"></p>
+            <form class="form-inline" role="form">
+              <div class="form-group">
+                <label for="id">Name:</label>
+                {{ unit.name.split('@.')[0] + '@' }}<input class="form-control" id="name">
+              </div>
+            </form>
           </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -27,84 +34,95 @@
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
+  {% else %}
+  <div class="btn-toolbar">
+    <button type="submit" class="btn btn-success pull-right" id="btnLaunch">Launch</button>
+    <button type="submit" class="btn btn-primary pull-right" id="btnLoad">Load</button>
+    <button type="submit" class="btn btn-info pull-right" id="btnSubmit">Submit</button>
+    <button type="submit" class="btn btn-danger pull-right" id="btnDestroy">Destroy</button>
+  </div>
   {% endif %}
 </div>
 
 <script>
-// Script to sanitize (decode) HTML characters
-function sanitize(body){
-  return body
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&#0*34;/g, '"')
-          .replace(/&#0*39;/g, "'")
-          .replace(/&amp;/g, "&");
-}
-
 $(function() {
   $("table").stupidtable();
   $('#units').attr("class", "active");
 
   $('#btnLaunch').on("click", function(){
-      var id = $('#id').val();
+    if($("#name").length == 0) {
+      var name = '{{ unit.name }}'
+    } else {
+      var id = $('#name').val();
       var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+    }
+    var serviceFile = $('pre').text();
 
-      var data = sanitize("{{ unit.json }}");
-
-      var json_data = JSON.parse(data);
-      json_data.desiredState = 'launched';
-      data = JSON.stringify(json_data);
-
-      $.ajax({
+    $.ajax({
       url: '/units/' + name,
       type: 'PUT',
-      success: function (){console.log('success')},
-      data: {'text': data},
+      success: function () {alert('Sucessful API call.')},
+      error: function () {alert('Error on API call. Verify your service file.')},
+      data: {'serviceFile': serviceFile, 'desiredState': 'launched'}
     });
 
     $('#newService').modal('hide');
   });
 
   $('#btnLoad').on("click", function(){
-    var id = $('#id').val();
-    var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+    if($("#name").length == 0) {
+      var name = '{{ unit.name }}'
+    } else {
+      var id = $('#name').val();
+      var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+    }
 
-    var data = sanitize("{{ unit.json }}");
-
-    var json_data = JSON.parse(data);
-    json_data.desiredState = 'loaded';
-    data = JSON.stringify(json_data);
+    var serviceFile = $('pre').text();
 
     $.ajax({
-    url: '/units/' + name,
-    type: 'PUT',
-    success: function (){console.log('success')},
-    data: {'text': data},
+      url: '/units/' + name,
+      type: 'PUT',
+      success: function () {alert('Sucessful API call.')},
+      error: function () {alert('Error on API call. Verify your service file.')},
+      data: {'serviceFile': serviceFile, 'desiredState': 'loaded'}
     });
 
     $('#newService').modal('hide');
   });
 
   $('#btnSubmit').on("click", function(){
-    var id = $('#id').val();
-    var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
-
-    var data = sanitize("{{ unit.json }}");
-    
-    var json_data = JSON.parse(data);
-    json_data.desiredState = 'inactive';
-    data = JSON.stringify(json_data);
+    if($("#name").length == 0) {
+      var name = '{{ unit.name }}'
+    } else {
+      var id = $('#name').val();
+      var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
+    }
+    var serviceFile = $('pre').text();
 
     $.ajax({
-    url: '/units/' + name,
-    type: 'PUT',
-    success: function (){console.log('success')},
-    data: {'text': data},
+      url: '/units/' + name,
+      type: 'PUT',
+      success: function () {alert('Sucessful API call.')},
+      error: function () {alert('Error on API call. Verify your service file.')},
+      data: {'serviceFile': serviceFile, 'desiredState': 'inactive'}
     });
 
     $('#newService').modal('hide');
   });
 
+  $('#btnDestroy').on("click", function(){
+    var name = '{{ unit.name }}'
+
+    $.ajax({
+      url: '/units/' + name,
+      type: 'DELETE',
+      success: function () {
+        alert('Sucessful API call.');
+        document.location.href = '/units';
+      },
+      error: function () {alert('Error on API call. Verify your service file.')}
+    });
+  });
 });
 </script>
 {% endblock %}
