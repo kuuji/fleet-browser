@@ -32,3 +32,24 @@ pre {
 #id {
   width : 15%;
 }
+
+.modal-dialog,
+.modal-content {
+    height: 90%;
+}
+
+.modal-body {
+    position: relative;
+    /* 100% = dialog height, 120px = header + footer */
+    max-height: calc(100% - 120px);
+
+    overflow-y: auto;
+}
+
+.form-inline {
+  text-align:left;
+}
+
+.form-left .form-group {
+    text-align: left;
+}
