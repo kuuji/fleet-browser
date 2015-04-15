@@ -43,7 +43,8 @@ $(function() {
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/&#0*34;/g, '"')
-            .replace(/&#0*39;/g, "'");
+            .replace(/&#0*39;/g, "'")
+            .replace(/&amp;/g, "&");
 
       var json_data = JSON.parse(data);
       json_data.desiredState = 'launched';
@@ -67,7 +68,8 @@ $(function() {
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&#0*34;/g, '"')
-          .replace(/&#0*39;/g, "'");
+          .replace(/&#0*39;/g, "'")
+          .replace(/&amp;/g, "&");
 
     var json_data = JSON.parse(data);
     json_data.desiredState = 'loaded';
@@ -91,7 +93,8 @@ $(function() {
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&#0*34;/g, '"')
-          .replace(/&#0*39;/g, "'");
+          .replace(/&#0*39;/g, "'")
+          .replace(/&amp;/g, "&");
 
     var json_data = JSON.parse(data);
     json_data.desiredState = 'inactive';
