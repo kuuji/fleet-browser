@@ -107,4 +107,4 @@ def show_machines():
     return render_template('machines.html', machines=data.get("machines",[]))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run('0.0.0.0', 5000, debug=True)
