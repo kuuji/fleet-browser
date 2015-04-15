@@ -6,8 +6,8 @@ tr[data-href]{
   cursor:pointer;
 }
 
-th {
-  text-align: center;
+td {
+  text-align: left;
 }
 
 /* Custom container */
