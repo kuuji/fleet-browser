@@ -31,6 +31,16 @@
 </div>
 
 <script>
+// Script to sanitize (decode) HTML characters
+function sanitize(body){
+  return body
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&#0*34;/g, '"')
+          .replace(/&#0*39;/g, "'")
+          .replace(/&amp;/g, "&");
+}
+
 $(function() {
   $("table").stupidtable();
   $('#units').attr("class", "active");
@@ -39,12 +49,7 @@ $(function() {
       var id = $('#id').val();
       var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
 
-      var data = "{{ unit.json }}"
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&#0*34;/g, '"')
-            .replace(/&#0*39;/g, "'")
-            .replace(/&amp;/g, "&");
+      var data = sanitize("{{ unit.json }}");
 
       var json_data = JSON.parse(data);
       json_data.desiredState = 'launched';
@@ -64,12 +69,7 @@ $(function() {
     var id = $('#id').val();
     var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
 
-    var data = "{{ unit.json }}"
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&#0*34;/g, '"')
-          .replace(/&#0*39;/g, "'")
-          .replace(/&amp;/g, "&");
+    var data = sanitize("{{ unit.json }}");
 
     var json_data = JSON.parse(data);
     json_data.desiredState = 'loaded';
@@ -89,13 +89,8 @@ $(function() {
     var id = $('#id').val();
     var name = '{{ unit.name }}'.split('@.')[0] + '@' + id + '.service';
 
-    var data = "{{ unit.json }}"
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&#0*34;/g, '"')
-          .replace(/&#0*39;/g, "'")
-          .replace(/&amp;/g, "&");
-
+    var data = sanitize("{{ unit.json }}");
+    
     var json_data = JSON.parse(data);
     json_data.desiredState = 'inactive';
     data = JSON.stringify(json_data);
