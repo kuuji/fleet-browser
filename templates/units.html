@@ -40,7 +40,7 @@
       <div class="modal-content" id="newServiceFileContent">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-          <h4 class="modal-title">Create new service file</h4>
+          <h4 class="modal-title">Create new unit file</h4>
         </div>
           <div class="modal-body" id="newServiceFileBody">
             <form  class="form-left" role="form">
@@ -82,7 +82,7 @@ $(function() {
       url: '/units/' + name,
       type: 'PUT',
       success: function () {document.location.href = '/units';},
-      error: function () {alert('Error on API call. Verify your service file.')},
+      error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'launched'}
     });
 
@@ -98,7 +98,7 @@ $(function() {
       url: '/units/' + name,
       type: 'PUT',
       success: function () {document.location.href = '/units';},
-      error: function () {alert('Error on API call. Verify your service file.')},
+      error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'loaded'}
     });
 
@@ -113,7 +113,7 @@ $(function() {
       url: '/units/' + name,
       type: 'PUT',
       success: function () {document.location.href = '/units';},
-      error: function () {alert('Error on API call. Verify your service file.')},
+      error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'inactive'}
     });
 
