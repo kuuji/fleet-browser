@@ -2,24 +2,11 @@
 
 [Fleet API](https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md) client running in the web.
 
-For now it has view capabilities + plus the ability to put units from existing templates.
-
-## Requirements
-
-### Python dependencies
-
-You need to have python installed and Flask. If you use pip, you can install Flask
-with command
-
-```
-pip install Flask
-```
-
-
-### Environment setup
+## Enabling Fleet API on your CoreOS cluster
 
 To use Fleet's API, you need to setup Fleet to serve the API over a network address.
-This can be done through a extension to unit `fleet.socket`. For example, you can
+
+If you're using CoreOS, this can be done through a extension to unit `fleet.socket`. For example, you can
 add the following to your cloud-config file:
 
 ```
@@ -34,18 +21,25 @@ add the following to your cloud-config file:
         WantedBy=sockets.target
 ```
 
-You'll just need to set a environment variable called `FLEET_ENDPOINT` which points to your
-Fleet API, for example:
+## Running this service
+
+The service runs in a Docker container. You'll just need to set the `FLEET_ENDPOINT` environment
+variable. For example, if you running it on port `8080` on host `172.17.8.101`, you can run
 
 ```
-export FLEET_ENDPOINT=172.17.8.101:8080
-```
-
-## Usage
-
-Just run
-```
-python app.py
+docker run -d -e FLEET_ENDPOINT=172..8.101:8080 -p 5000:5000 cloudwalk/fleet-browser
 ```
 
 The server should be up in `http://localhost:5000`.
+
+## Troubleshooting
+
+If you get some server error, it may be due to the fact that your Fleet host is not reachable from
+within the container.
+
+If you're running CoreOS locally (on a Vagrant machine, for instance), you may need to give
+the container access to it's host network, using the `--net=host` flag:
+
+```
+docker run -d -e FLEET_ENDPOINT=172..8.101:8080 -p 5000:5000 --net=host cloudwalk/fleet-browser
+```
