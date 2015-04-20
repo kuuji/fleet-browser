@@ -53,6 +53,16 @@ def show_units():
     data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
     return render_template('units.html', units=data.get("units", []))
 
+@app.route('/state')
+def show_state():
+    data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
+    return render_template('state.html', states=data.get("states",[]))
+
+@app.route('/machines')
+def show_machines():
+    data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+    return render_template('machines.html', machines=data.get("machines",[]))
+
 @app.route('/units/<name>', methods=['GET', 'PUT', 'DELETE'])
 def handle_unit(name):
     if request.method == 'GET':
@@ -95,16 +105,6 @@ def handle_unit(name):
             response_message = 'Not found'
 
         return response_message, status_code
-
-@app.route('/state')
-def show_state():
-    data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
-    return render_template('state.html', states=data.get("states",[]))
-
-@app.route('/machines')
-def show_machines():
-    data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    return render_template('machines.html', machines=data.get("machines",[]))
 
 if __name__ == '__main__':
     app.run('0.0.0.0', 5000, debug=True)
