@@ -14,15 +14,15 @@
       {% for unit in units %}
 
       {% if unit.currentState == "launched" %}
-        <tr data-href="/units/{{ unit.name }}" class="success">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="success">
       {% elif unit.currentState == "failed" %}
-        <tr data-href="/units/{{ unit.name }}" class="danger">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="danger">
       {% elif unit.currentState == "inactive" %}
-        <tr data-href="/units/{{ unit.name }}" class="warning">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="warning">
       {% elif unit.currentState == "loaded" %}
-        <tr data-href="/units/{{ unit.name }}" class="active">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="active">
       {% else %}
-        <tr data-href="/units/{{ unit.name }}">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}">
       {% endif %}
 
         <td>{{ unit.name }}</td>
@@ -79,9 +79,9 @@ $(function() {
     var serviceFile = $("#service-file").val();
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'PUT',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'launched'}
     });
@@ -92,12 +92,11 @@ $(function() {
   $('#btnLoad').on("click", function(){
     var name = $("#service-name").val();
     var serviceFile = $("#service-file").val();
-    console.log(serviceFile)
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'PUT',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'loaded'}
     });
@@ -110,9 +109,9 @@ $(function() {
     var serviceFile = $("#service-file").val();
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'PUT',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'inactive'}
     });

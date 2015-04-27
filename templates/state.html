@@ -15,15 +15,15 @@
       {% for unit in states %}
 
       {% if unit.systemdActiveState == "active" %}
-        <tr data-href="/units/{{ unit.name }}" class="success">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="success">
       {% elif unit.systemdActiveState == "failed" %}
-        <tr data-href="/units/{{ unit.name }}" class="danger">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="danger">
       {% elif unit.systemdActiveState == "inactive" %}
-        <tr data-href="/units/{{ unit.name }}" class="warning">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="warning">
       {% elif unit.systemdActiveState == "loaded" %}
-        <tr data-href="/units/{{ unit.name }}" class="active">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}" class="active">
       {% else %}
-        <tr data-href="/units/{{ unit.name }}">
+        <tr data-href="/units/{{ unit.name }}?access_token={{ token }}">
       {% endif %}
 
         <td>{{ unit.name }}</td>

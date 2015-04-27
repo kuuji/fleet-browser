@@ -59,9 +59,9 @@ $(function() {
     var serviceFile = $('pre').text();
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'PUT',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'launched'}
     });
@@ -80,9 +80,9 @@ $(function() {
     var serviceFile = $('pre').text();
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'PUT',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'loaded'}
     });
@@ -100,9 +100,9 @@ $(function() {
     var serviceFile = $('pre').text();
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'PUT',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')},
       data: {'serviceFile': serviceFile, 'desiredState': 'inactive'}
     });
@@ -114,9 +114,9 @@ $(function() {
     var name = '{{ unit.name }}'
 
     $.ajax({
-      url: '/units/' + name,
+      url: '/units/' + name + '?access_token={{ token }}',
       type: 'DELETE',
-      success: function () {document.location.href = '/units';},
+      success: function () {document.location.href = '/units?access_token={{ token }}';},
       error: function () {alert('Error on API call. Verify your unit file.')}
     });
   });

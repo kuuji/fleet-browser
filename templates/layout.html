@@ -22,9 +22,9 @@
       </div>
       <div class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
-          <li id="state"><a href="/state">State</a></li>
-          <li id="units"><a href="/units">Units</a></li>
-          <li id="machines"><a href="/machines">Machines</a></li>
+          <li id="state"><a href="/state?access_token={{ token }}">State</a></li>
+          <li id="units"><a href="/units?access_token={{ token }}">Units</a></li>
+          <li id="machines"><a href="/machines?access_token={{ token }}">Machines</a></li>
         </ul>
       </div><!--/.nav-collapse -->
     </div>
@@ -33,4 +33,5 @@
   <div class="jumbotron text-center">
     {% block body %}{% endblock %}
   </div>
+
 </div>
