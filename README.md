@@ -23,9 +23,15 @@ add the following to your cloud-config file:
         WantedBy=sockets.target
 ```
 
-## Running this service
+## Usage
 
-The service runs in a Docker container. You'll just need to set the `FLEET_ENDPOINT` environment
+The service runs in a Docker container, so you can just start a container directly
+or wrap this inside a unit file, if you're running the service in your CoreOS cluster,
+for instance (which I suppose is the common scenario).
+
+### Running is as a container directly
+
+You'll just need to set the container's `FLEET_ENDPOINT` environment
 variable. For example, if you running it on port `8080` on host `172.17.8.101`, you can run
 
 ```
@@ -33,6 +39,31 @@ docker run -d -e FLEET_ENDPOINT=172.17.8.101:8080 -p 5000:5000 cloudwalk/fleet-b
 ```
 
 The server should be up in `http://localhost:5000`.
+
+### Running it as a unit file
+
+You may want to run this on your CoreOS cluster, in which case you can use the
+following unit file:
+
+```
+[Unit]
+Description=Expose Fleet API in a nice GUI
+Requires=docker.service
+After=docker.service  
+
+[Service]
+EnvironmentFile=/etc/environment
+KillMode=none
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill fleet-browser
+ExecStartPre=-/usr/bin/docker rm fleet-browser
+ExecStartPre=/usr/bin/docker pull cloudwalk/fleet-browser
+ExecStart=/usr/bin/docker run --rm --name fleet-browser -e FLEET_ENDPOINT=${COREOS_PRIVATE_IPV4}:8080 \
+  -p 5000:5000 cloudwalk/fleet-browser
+ExecStop=/usr/bin/docker stop fleet-browser
+```
 
 ### [Optional] URL authentication
 
