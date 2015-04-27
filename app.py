@@ -8,6 +8,11 @@ FLEET_ENDPOINT = os.environ.get('FLEET_ENDPOINT', '172.17.8.101:8080')
 
 app = Flask(__name__)
 
+if os.environ.get('ACCESS_TOKEN'):
+    app.config['ACCESS_TOKEN'] = os.environ.get('ACCESS_TOKEN')
+else:
+    app.config['ACCESS_TOKEN'] = ''
+
 def json_to_service_file(json_service):
     string_service = ''
     sections = {}
@@ -46,25 +51,41 @@ def service_file_to_json(string_service):
 
 @app.route('/')
 def index():
-    return redirect(url_for('show_state'))
+    token = request.args.get('access_token', '')
+    if token != app.config.get('ACCESS_TOKEN'):
+        return abort(401)
+    return redirect(url_for('show_state', access_token=token))
 
 @app.route('/units')
 def show_units():
+    token = request.args.get('access_token', '')
+    if token != app.config.get('ACCESS_TOKEN'):
+        return abort(401)
     data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
-    return render_template('units.html', units=data.get("units", []))
+    return render_template('units.html', units=data.get("units", []), token=token)
 
 @app.route('/state')
 def show_state():
+    token = request.args.get('access_token', '')
+    if token != app.config.get('ACCESS_TOKEN'):
+        return abort(401)
     data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
-    return render_template('state.html', states=data.get("states",[]))
+    return render_template('state.html', states=data.get("states",[]), token=token)
 
 @app.route('/machines')
 def show_machines():
+    token = request.args.get('access_token', '')
+    if token != app.config.get('ACCESS_TOKEN'):
+        return abort(401)
     data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    return render_template('machines.html', machines=data.get("machines",[]))
+    return render_template('machines.html', machines=data.get("machines",[]), token=token)
 
 @app.route('/units/<name>', methods=['GET', 'PUT', 'DELETE'])
 def handle_unit(name):
+    token = request.args.get('access_token', '')
+    if token != app.config.get('ACCESS_TOKEN'):
+        return abort(401)
+
     if request.method == 'GET':
         data = requests.get('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name)).json()
         try:
@@ -73,7 +94,7 @@ def handle_unit(name):
             abort(404)
 
         unit['service'] = json_to_service_file(data['options'])
-        return render_template('unit.html', unit=unit)
+        return render_template('unit.html', unit=unit, token=token)
     elif request.method == 'PUT':
         # Assembly data to send to API
         json_service = {
