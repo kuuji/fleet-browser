@@ -1,5 +1,7 @@
 # Fleet Browser
 
+[![Docker build](http://dockeri.co/image/cloudwalk/fleet-browser)](https://registry.hub.docker.com/u/cloudwalk/fleet-browser/)
+
 [Fleet API](https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md) client running in the web.
 
 ## Enabling Fleet API on your CoreOS cluster
