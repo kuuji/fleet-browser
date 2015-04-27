@@ -27,10 +27,24 @@ The service runs in a Docker container. You'll just need to set the `FLEET_ENDPO
 variable. For example, if you running it on port `8080` on host `172.17.8.101`, you can run
 
 ```
-docker run -d -e FLEET_ENDPOINT=172..8.101:8080 -p 5000:5000 cloudwalk/fleet-browser
+docker run -d -e FLEET_ENDPOINT=172.17.8.101:8080 -p 5000:5000 cloudwalk/fleet-browser
 ```
 
 The server should be up in `http://localhost:5000`.
+
+### [Optional] URL authentication
+
+There is a simple authentication mechanism using an URL parameter `access_token`.
+To enable it, just set a container's environment variable called `ACCESS_TOKEN`.
+For instance:
+
+```
+docker run -d -e FLEET_ENDPOINT=172.17.8.101:8080 -e ACCESS_TOKEN=ishallpass \
+  -p 5000:5000 cloudwalk/fleet-browser
+```
+
+Then, to access the server, you should do something like
+`http://localhost:5000/?access_token=ishallpass`.
 
 ## Troubleshooting
 
@@ -41,5 +55,5 @@ If you're running CoreOS locally (on a Vagrant machine, for instance), you may n
 the container access to it's host network, using the `--net=host` flag:
 
 ```
-docker run -d -e FLEET_ENDPOINT=172..8.101:8080 -p 5000:5000 --net=host cloudwalk/fleet-browser
+docker run -d -e FLEET_ENDPOINT=172.17.8.101:8080 -p 5000:5000 --net=host cloudwalk/fleet-browser
 ```
