@@ -105,7 +105,7 @@ def show_dashboard():
         elif state['systemdActiveState'] == 'inactive':
             templates[template_name]['inactive'] += 1
         else:
-            templates[template_name]['others'] += 1
+            templates[template_name]['other'] += 1
 
     # Transform data to be used by Highcharts
     templates_labels = templates.keys()
