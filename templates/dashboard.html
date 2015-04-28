@@ -56,13 +56,13 @@ $(function() {
                  y: parseInt({{ states_count.active }}),
                  color: colors['active']
                 },
-                {name: 'Failed',
-                 y: parseInt({{ states_count.failed }}),
-                 color: colors['failed']
-                },
                 {name: 'Inactive',
                  y: parseInt({{ states_count.inactive }}),
                  color: colors['inactive']
+                 },
+                 {name: 'Failed',
+                  y: parseInt({{ states_count.failed }}),
+                  color: colors['failed']
                  },
                  {name: 'Other',
                   y: parseInt({{ states_count.other }}),
