@@ -108,7 +108,7 @@ def show_dashboard():
             templates[template_name]['other'] += 1
 
     # Transform data to be used by Highcharts
-    templates_labels = templates.keys()
+    templates_labels = sorted(templates.keys())
     templates_counts = [{'name': 'active', 'data': [], 'color': 'red'}, {'name': 'inactive', 'data': []},
                         {'name': 'failed', 'data': []}, {'name': 'other', 'data': []}]
     for label in templates_labels:
