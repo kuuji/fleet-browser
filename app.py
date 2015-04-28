@@ -54,7 +54,75 @@ def index():
     token = request.args.get('access_token', '')
     if token != app.config.get('ACCESS_TOKEN'):
         return abort(401)
-    return redirect(url_for('show_state', access_token=token))
+    return redirect(url_for('show_dashboard', access_token=token))
+
+@app.route('/dashboard')
+def show_dashboard():
+    token = request.args.get('access_token', '')
+    if token != app.config.get('ACCESS_TOKEN'):
+        return abort(401)
+
+    units = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json().get("units", [])
+
+    units_count = {'launched': 0, 'loaded': 0, 'inactive': 0, 'other': 0}
+    # Count states
+    for unit in units:
+        if unit['currentState'] == 'launched':
+            units_count['launched'] += 1
+        elif unit['currentState'] == 'loaded':
+            units_count['loaded'] += 1
+        elif unit['currentState'] == 'inactive':
+            units_count['inactive'] += 1
+        else:
+            units_count['other'] += 1
+
+    states = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json().get("states", [])
+
+    states_count = {'active': 0, 'inactive': 0, 'failed': 0, 'other': 0}
+    templates = {}
+    # Count states
+    for state in states:
+        if state['systemdActiveState'] == 'active':
+            states_count['active'] += 1
+        elif state['systemdActiveState'] == 'failed':
+            states_count['failed'] += 1
+        elif state['systemdActiveState'] == 'inactive':
+            states_count['inactive'] += 1
+        else:
+            states_count['other'] += 1
+
+        # Initialize templates dictionaries
+        template_name = state['name'].split('@')[0]
+        templates[template_name] = {'active': 0, 'inactive': 0, 'failed': 0, 'other': 0}
+
+    # Count states per template
+    for state in states:
+        template_name = state['name'].split('@')[0]
+        if state['systemdActiveState'] == 'active':
+            templates[template_name]['active'] += 1
+        elif state['systemdActiveState'] == 'failed':
+            templates[template_name]['failed'] += 1
+        elif state['systemdActiveState'] == 'inactive':
+            templates[template_name]['inactive'] += 1
+        else:
+            templates[template_name]['others'] += 1
+
+    # Transform data to be used by Highcharts
+    templates_labels = templates.keys()
+    templates_counts = [{'name': 'active', 'data': [], 'color': 'red'}, {'name': 'inactive', 'data': []},
+                        {'name': 'failed', 'data': []}, {'name': 'other', 'data': []}]
+    for label in templates_labels:
+        templates_counts[0]['data'].append(templates[label]['active'])
+        templates_counts[1]['data'].append(templates[label]['inactive'])
+        templates_counts[2]['data'].append(templates[label]['failed'])
+        templates_counts[3]['data'].append(templates[label]['other'])
+
+    return render_template('dashboard.html',
+                           states_count=states_count,
+                           units_count=units_count,
+                           templates_labels=templates_labels,
+                           templates_counts=templates_counts,
+                           token=token)
 
 @app.route('/units')
 def show_units():

@@ -1,0 +1,191 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6" id="states-chart"></div>
+        <div class="col-sm-6" id="units-chart"></div>
+    </div>
+    <div id="templates"></div>
+</div>
+
+<script>
+$(function() {
+
+    colors = {
+        active: '#1FDA9A',
+        launched: '#1FDA9A',
+        inactive: '#E8B71A',
+        failed: '#DB3340',
+        other: '#F7EAC8',
+        loaded: '#28ABE3'
+        }
+
+    // Build states chart
+    $('#states-chart').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'States'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.y}</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Units',
+            data: [
+                {name: 'Active',
+                 y: parseInt({{ states_count.active }}),
+                 color: colors['active']
+                },
+                {name: 'Failed',
+                 y: parseInt({{ states_count.failed }}),
+                 color: colors['failed']
+                },
+                {name: 'Inactive',
+                 y: parseInt({{ states_count.inactive }}),
+                 color: colors['inactive']
+                 },
+                 {name: 'Other',
+                  y: parseInt({{ states_count.other }}),
+                  color: colors['other']
+                 }
+            ]
+        }]
+    });
+
+    // Build units chart
+    $('#units-chart').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'Units'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.y}</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Units',
+            data: [
+                {name: 'Launched',
+                 y: parseInt({{ units_count.launched }}),
+                 color: colors['launched']
+                },
+                {name: 'Loaded',
+                 y: parseInt({{ units_count.loaded }}),
+                 color: colors['loaded']
+                },
+                {name: 'Inactive',
+                 y: parseInt({{ units_count.inactive }}),
+                 color: colors['inactive']
+                 },
+                 {name: 'Other',
+                  y: parseInt({{ units_count.other }}),
+                  color: colors['other']
+                 }
+            ]
+        }]
+    });
+
+    // Templates data
+    $('#templates').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Instances per template'
+        },
+        xAxis: {
+            categories: [
+                {% for label in templates_labels %}
+                '{{ label }}',
+                {% endfor %}
+            ]
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Total number of instances'
+            },
+            stackLabels: {
+                enabled: true,
+                style: {
+                    fontWeight: 'bold',
+                    color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                }
+            }
+        },
+        legend: {
+            align: 'right',
+            x: -30,
+            verticalAlign: 'top',
+            y: 25,
+            floating: true,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+            borderColor: '#CCC',
+            borderWidth: 1,
+            shadow: false
+        },
+        tooltip: {
+            formatter: function () {
+                return '<b>' + this.x + '</b><br/>' +
+                    this.series.name + ': ' + this.y + '<br/>' +
+                    'Total: ' + this.point.stackTotal;
+            }
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: {
+                    enabled: true,
+                    color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white',
+                    style: {
+                        textShadow: '0 0 3px black'
+                    }
+                }
+            }
+        },
+        series: [
+            {% for serie in templates_counts %}
+            {name: '{{ serie.name }}',
+             data: {{ serie.data }},
+             color: colors['{{ serie.name }}']},
+            {% endfor %}
+        ]
+    });
+});
+</script>
+{% endblock %}
