@@ -129,6 +129,9 @@ $(function() {
             text: 'Instances per template'
         },
         xAxis: {
+            labels: {
+                rotation: -45
+            },
             categories: [
                 {% for label in templates_labels %}
                 '{{ label }}',
