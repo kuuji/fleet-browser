@@ -29,7 +29,7 @@ The service runs in a Docker container, so you can just start a container direct
 or wrap this inside a unit file, if you're running the service in your CoreOS cluster,
 for instance (which I suppose is the common scenario).
 
-### Running is as a container directly
+### Running it as a container directly
 
 You'll just need to set the container's `FLEET_ENDPOINT` environment
 variable. For example, if you running it on port `8080` on host `172.17.8.101`, you can run
@@ -60,8 +60,9 @@ RestartSec=10s
 ExecStartPre=-/usr/bin/docker kill fleet-browser
 ExecStartPre=-/usr/bin/docker rm fleet-browser
 ExecStartPre=/usr/bin/docker pull cloudwalk/fleet-browser
-ExecStart=/usr/bin/docker run --rm --name fleet-browser -e FLEET_ENDPOINT=${COREOS_PRIVATE_IPV4}:8080 \
-  -p 5000:5000 cloudwalk/fleet-browser
+ExecStart=/usr/bin/docker run --rm --name fleet-browser \
+ -e FLEET_ENDPOINT=${COREOS_PRIVATE_IPV4}:8080 \
+ -p 5000:5000 cloudwalk/fleet-browser
 ExecStop=/usr/bin/docker stop fleet-browser
 ```
 
