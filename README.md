@@ -2,7 +2,10 @@
 
 [![Docker build](http://dockeri.co/image/cloudwalk/fleet-browser)](https://registry.hub.docker.com/u/cloudwalk/fleet-browser/)
 
-[Fleet API](https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md) client running in the web.
+This is a [Fleet's API](https://github.com/coreos/fleet/blob/master/Documentation/api-v1.md) web user interface.
+Using this you can access data about your [CoreOS](https://coreos.com/) cluster and even create and launch new units in it.
+
+![dashboard](https://rawgithub.com/cloudwalkio/fleet-browser/master/docs/images/dashboard.png)
 
 ## Enabling Fleet API on your CoreOS cluster
 
@@ -92,6 +95,28 @@ the container access to it's host network, using the `--net=host` flag:
 docker run -d -e FLEET_ENDPOINT=172.17.8.101:8080 -p 5000:5000 --net=host cloudwalk/fleet-browser
 ```
 
-## Screenshots
+## License
 
-![dashboard](https://rawgithub.com/cloudwalkio/fleet-browser/master/docs/images/dashboard.png)
+```
+The MIT License (MIT)
+
+Copyright (c) 2015 CloudWalk, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
