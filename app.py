@@ -129,7 +129,24 @@ def show_units():
     token = request.args.get('access_token', '')
     if token != app.config.get('ACCESS_TOKEN'):
         return abort(401)
+    # Get units data
     data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
+
+    # Get machines data to get IPs matched from IDs
+    machines_data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+    machines_ips = {}
+    for machine in machines_data['machines']:
+        machines_ips[machine['id']] = machine['primaryIP']
+
+    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
+    for i in range(len(data['units'])):
+        if 'machineID' in data['units'][i]:
+            machine_id = data['units'][i]['machineID']
+            machine_ip = machines_ips[machine_id]
+            data['units'][i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
+        else: # If there's no machineID, use a single '-', like fleetctl
+            data['units'][i]['machine'] = '-'
+
     return render_template('units.html', units=data.get("units", []), token=token)
 
 @app.route('/state')
@@ -137,7 +154,21 @@ def show_state():
     token = request.args.get('access_token', '')
     if token != app.config.get('ACCESS_TOKEN'):
         return abort(401)
+    # Get states data
     data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
+
+    # Get machines data to get IPs matched from IDs
+    machines_data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+    machines_ips = {}
+    for machine in machines_data['machines']:
+        machines_ips[machine['id']] = machine['primaryIP']
+
+    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
+    for i in range(len(data['states'])):
+        machine_id = data['states'][i]['machineID']
+        machine_ip = machines_ips[machine_id]
+        data['states'][i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
+
     return render_template('state.html', states=data.get("states",[]), token=token)
 
 @app.route('/machines')

@@ -6,6 +6,7 @@
     <thead>
       <tr>
         <th data-sort="string">UNIT</th>
+        <th data-sort="string">HASH</th>
         <th data-sort="string">MACHINE</th>
         <th data-sort="string">ACTIVE</th>
         <th data-sort="string">SUB</th>
@@ -27,7 +28,8 @@
       {% endif %}
 
         <td>{{ unit.name }}</td>
-        <td>{{ unit.machineID }}</td>
+        <td>{{ unit.hash[0:8] }}</td>
+        <td>{{ unit.machine }}</td>
         <td>{{ unit.systemdActiveState }}</td>
         <td>{{ unit.systemdSubState }}</td>
       </tr>

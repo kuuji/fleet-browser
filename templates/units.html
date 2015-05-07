@@ -8,6 +8,7 @@
         <th data-sort="string">UNIT</th>
         <th data-sort="string">DSTATE</th>
         <th data-sort="string">STATE</th>
+        <th data-sort="string">TARGET</th>
       </tr>
     </thead>
     <tbody>
@@ -28,6 +29,7 @@
         <td>{{ unit.name }}</td>
         <td class="{{ unit.desiredState }}">{{ unit.desiredState }}</td>
         <td class="{{ unit.currentState }}">{{ unit.currentState }}</td>
+        <td class="{{ unit.machine }}">{{ unit.machine }}</td>
       </tr>
       {% endfor %}
     </tbody>
