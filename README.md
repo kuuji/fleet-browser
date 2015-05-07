@@ -91,3 +91,7 @@ the container access to it's host network, using the `--net=host` flag:
 ```
 docker run -d -e FLEET_ENDPOINT=172.17.8.101:8080 -p 5000:5000 --net=host cloudwalk/fleet-browser
 ```
+
+## Screenshots
+
+![dashboard](https://rawgithub.com/cloudwalkio/fleet-browser/master/docs/images/dashboard.png)
