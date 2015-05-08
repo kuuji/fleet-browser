@@ -48,7 +48,7 @@ def service_file_to_json(string_service):
                     'value': value
                 })
             else: # Continuation of previous command, like using '\' to split commands
-                json_service[-1]['value'] += line
+                json_service[-1]['value'] += '%s\n' % line
     return json_service
 
 @app.route('/')
