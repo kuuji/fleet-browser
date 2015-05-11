@@ -141,7 +141,7 @@ def show_units():
         machines_ips[machine['id']] = machine['primaryIP']
 
     # Transform machine ID into machine string: hash => simple_hash.../machine_IP
-    for i in range(len(data['units'])):
+    for i in range(len(data.get('units', []))):
         if 'machineID' in data['units'][i]:
             machine_id = data['units'][i]['machineID']
             machine_ip = machines_ips[machine_id]
@@ -166,7 +166,7 @@ def show_state():
         machines_ips[machine['id']] = machine['primaryIP']
 
     # Transform machine ID into machine string: hash => simple_hash.../machine_IP
-    for i in range(len(data['states'])):
+    for i in range(len(data.get('states', []))):
         machine_id = data['states'][i]['machineID']
         machine_ip = machines_ips[machine_id]
         data['states'][i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
