@@ -39,11 +39,20 @@ pre {
 }
 
 .modal-body {
-    position: relative;
-    /* 100% = dialog height, 120px = header + footer */
-    max-height: calc(100% - 120px);
+  position: relative;
+  /* 100% = dialog height, 120px = header + footer */
+  max-height: calc(100% - 120px);
+  overflow-y: auto;
+}
 
-    overflow-y: auto;
+.simpleLayout .modal-dialog {
+    width: 25%;
+}
+.simpleLayout .modal-content {
+
+}
+.simpleLayout .modal-body {
+
 }
 
 .form-inline {
