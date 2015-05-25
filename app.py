@@ -1,5 +1,5 @@
 import requests
-from flask import Flask, request, url_for, render_template, redirect, abort, session, flash
+from flask import Flask, request, url_for, render_template, redirect, abort, session
 import os
 import json
 import re
@@ -79,6 +79,8 @@ def login():
             if TOTP is not None:
                 return redirect(url_for('totp'))
             else:
+                # Set totp to True if no key specified
+                session['totp'] = True
                 return redirect(url_for('index'))
     return render_template('login.html', error=error)
 
@@ -92,14 +94,12 @@ def logout():
 @app.route('/totp', methods=['GET', 'POST'])
 def totp():
     error = None
-    print TOTP.now()
     if session.get('username', None) != USERNAME or session.get('password', None) != PASSWORD:
         return redirect(url_for('login'))
 
     if request.method == 'POST':
         try:
             token = int(request.form.get('totp-token', -1))
-            print token
             if not TOTP.verify(token):
                 error = 'Wrong TOTP token.'
             else:
