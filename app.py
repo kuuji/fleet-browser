@@ -1,17 +1,18 @@
 import requests
-from flask import Flask, request, url_for, render_template, redirect, abort
+from flask import Flask, request, url_for, render_template, redirect, abort, session
 import os
 import json
 import re
 
 FLEET_ENDPOINT = os.environ.get('FLEET_ENDPOINT', '172.17.8.101:8080')
+USERNAME = os.environ.get('USERNAME', 'admin')
+PASSWORD = os.environ.get('PASSWORD', 'admin')
+ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN', '')
 
 app = Flask(__name__)
 
-if os.environ.get('ACCESS_TOKEN'):
-    app.config['ACCESS_TOKEN'] = os.environ.get('ACCESS_TOKEN')
-else:
-    app.config['ACCESS_TOKEN'] = ''
+
+app.secret_key = os.urandom(24)
 
 def json_to_service_file(json_service):
     string_service = ''
@@ -51,20 +52,53 @@ def service_file_to_json(string_service):
                 json_service[-1]['value'] += '\n%s' % line
     return json_service
 
+def is_logged():
+    if session.get('username', None) == USERNAME:
+        if session.get('password', None) == USERNAME:
+            return True
+    return False
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form['username'] != USERNAME or request.form['password'] != PASSWORD:
+            error = 'Invalid Credentials. Please try again.'
+        else:
+            session['username'] = USERNAME
+            session['password'] = PASSWORD
+            return redirect(url_for('index'))
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    session.pop('password', None)
+    return redirect(url_for('index'))
+
 @app.route('/')
 def index():
+    if not is_logged():
+        return redirect(url_for('login'))
+
     token = request.args.get('access_token', '')
-    if token != app.config.get('ACCESS_TOKEN'):
+    if token != ACCESS_TOKEN:
         return abort(401)
     return redirect(url_for('show_dashboard', access_token=token))
 
 @app.route('/dashboard')
 def show_dashboard():
+    if not is_logged():
+        return redirect(url_for('login'))
+
     token = request.args.get('access_token', '')
-    if token != app.config.get('ACCESS_TOKEN'):
+    if token != ACCESS_TOKEN:
         return abort(401)
 
-    units = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json().get("units", [])
+    try:
+        units = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json().get("units", [])
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
 
     units_count = {'launched': 0, 'loaded': 0, 'inactive': 0, 'other': 0}
     # Count states
@@ -128,12 +162,17 @@ def show_dashboard():
 
 @app.route('/units')
 def show_units():
+    if not is_logged():
+        return redirect(url_for('login'))
+
     token = request.args.get('access_token', '')
-    if token != app.config.get('ACCESS_TOKEN'):
+    if token != ACCESS_TOKEN:
         return abort(401)
     # Get units data
-    data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
-
+    try:
+        data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
     # Get machines data to get IPs matched from IDs
     machines_data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
     machines_ips = {}
@@ -153,11 +192,17 @@ def show_units():
 
 @app.route('/state')
 def show_state():
+    if not is_logged():
+        return redirect(url_for('login'))
+
     token = request.args.get('access_token', '')
-    if token != app.config.get('ACCESS_TOKEN'):
+    if token != ACCESS_TOKEN:
         return abort(401)
     # Get states data
-    data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
+    try:
+        data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
 
     # Get machines data to get IPs matched from IDs
     machines_data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
@@ -175,20 +220,35 @@ def show_state():
 
 @app.route('/machines')
 def show_machines():
+    if not is_logged():
+        return redirect(url_for('login'))
+
     token = request.args.get('access_token', '')
-    if token != app.config.get('ACCESS_TOKEN'):
+    if token != ACCESS_TOKEN:
         return abort(401)
-    data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+
+    try:
+        data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
+
     return render_template('machines.html', machines=data.get("machines",[]), token=token)
 
 @app.route('/units/<name>', methods=['GET', 'PUT', 'DELETE'])
 def handle_unit(name):
+    if not is_logged():
+        return redirect(url_for('login'))
+
     token = request.args.get('access_token', '')
-    if token != app.config.get('ACCESS_TOKEN'):
+    if token != ACCESS_TOKEN:
         return abort(401)
 
     if request.method == 'GET':
-        data = requests.get('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name)).json()
+        try:
+            data = requests.get('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name)).json()
+        except requests.ConnectionError, e:
+            return render_template('error.html', error=e)
+
         try:
             unit = {'name': data['name']}
         except:
