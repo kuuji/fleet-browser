@@ -94,9 +94,6 @@ def logout():
 @app.route('/totp', methods=['GET', 'POST'])
 def totp():
     error = None
-    if session.get('username', None) != USERNAME or session.get('password', None) != PASSWORD:
-        return redirect(url_for('login'))
-
     if request.method == 'POST':
         try:
             token = int(request.form.get('totp-token', -1))
