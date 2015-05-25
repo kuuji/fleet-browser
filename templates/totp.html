@@ -1,0 +1,19 @@
+{% extends "simpleLayout.html" %}
+
+{% block title %}
+Welcome to Fleet Browser!
+{% endblock %}
+
+{% block body %}
+<form id="loginForm" method="POST" action="/totp" novalidate="novalidate">
+    <div class="form-group">
+        <label for="totp-token">Authentication code</label>
+        <input type="text" class="form-control" id="totp-token" name="totp-token" value="" required="" title="Please enter the authentication code">
+        <span class="help-block"></span>
+    </div>
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-success btn-block">Verify</button>
+</form>{% endblock %}
