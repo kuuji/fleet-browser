@@ -1,18 +1,33 @@
 import requests
-from flask import Flask, request, url_for, render_template, redirect, abort, session
+from flask import Flask, request, url_for, render_template, redirect, abort, session, flash
 import os
 import json
 import re
+import pyotp
+from functools import wraps
 
 FLEET_ENDPOINT = os.environ.get('FLEET_ENDPOINT', '172.17.8.101:8080')
 USERNAME = os.environ.get('USERNAME', 'admin')
 PASSWORD = os.environ.get('PASSWORD', 'admin')
-ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN', '')
+TOTP_KEY = os.environ.get('TOTP_KEY', None)
+if TOTP_KEY is not None:
+    TOTP = pyotp.TOTP(TOTP_KEY)
+else:
+    TOTP = None
 
 app = Flask(__name__)
-
-
 app.secret_key = os.urandom(24)
+
+def logged_in(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('username', None) == USERNAME:
+            if session.get('password', None) == PASSWORD:
+                if session.get('totp', False):
+                    return f(*args, **kwargs)
+
+        return redirect(url_for('login'))
+    return decorated_function
 
 def json_to_service_file(json_service):
     string_service = ''
@@ -52,12 +67,6 @@ def service_file_to_json(string_service):
                 json_service[-1]['value'] += '\n%s' % line
     return json_service
 
-def is_logged():
-    if session.get('username', None) == USERNAME:
-        if session.get('password', None) == USERNAME:
-            return True
-    return False
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -67,34 +76,47 @@ def login():
         else:
             session['username'] = USERNAME
             session['password'] = PASSWORD
-            return redirect(url_for('index'))
+            if TOTP is not None:
+                return redirect(url_for('totp'))
+            else:
+                return redirect(url_for('index'))
     return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     session.pop('password', None)
+    session.pop('totp', None)
     return redirect(url_for('index'))
 
-@app.route('/')
-def index():
-    if not is_logged():
+@app.route('/totp', methods=['GET', 'POST'])
+def totp():
+    error = None
+    print TOTP.now()
+    if session.get('username', None) != USERNAME or session.get('password', None) != PASSWORD:
         return redirect(url_for('login'))
 
-    token = request.args.get('access_token', '')
-    if token != ACCESS_TOKEN:
-        return abort(401)
-    return redirect(url_for('show_dashboard', access_token=token))
+    if request.method == 'POST':
+        try:
+            token = int(request.form.get('totp-token', -1))
+            print token
+            if not TOTP.verify(token):
+                error = 'Wrong TOTP token.'
+            else:
+                session['totp'] = True
+                return redirect(url_for('index'))
+        except ValueError:
+            error = 'The token is a 6 digit number.'
+    return render_template('totp.html', error=error)
+
+@app.route('/')
+@logged_in
+def index():
+    return redirect(url_for('show_dashboard'))
 
 @app.route('/dashboard')
+@logged_in
 def show_dashboard():
-    if not is_logged():
-        return redirect(url_for('login'))
-
-    token = request.args.get('access_token', '')
-    if token != ACCESS_TOKEN:
-        return abort(401)
-
     try:
         units = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json().get("units", [])
     except requests.ConnectionError, e:
@@ -157,17 +179,11 @@ def show_dashboard():
                            states_count=states_count,
                            units_count=units_count,
                            templates_labels=templates_labels,
-                           templates_counts=templates_counts,
-                           token=token)
+                           templates_counts=templates_counts)
 
 @app.route('/units')
+@logged_in
 def show_units():
-    if not is_logged():
-        return redirect(url_for('login'))
-
-    token = request.args.get('access_token', '')
-    if token != ACCESS_TOKEN:
-        return abort(401)
     # Get units data
     try:
         data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
@@ -188,16 +204,11 @@ def show_units():
         else: # If there's no machineID, use a single '-', like fleetctl
             data['units'][i]['machine'] = '-'
 
-    return render_template('units.html', units=data.get("units", []), token=token)
+    return render_template('units.html', units=data.get("units", []))
 
 @app.route('/state')
+@logged_in
 def show_state():
-    if not is_logged():
-        return redirect(url_for('login'))
-
-    token = request.args.get('access_token', '')
-    if token != ACCESS_TOKEN:
-        return abort(401)
     # Get states data
     try:
         data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
@@ -216,33 +227,21 @@ def show_state():
         machine_ip = machines_ips[machine_id]
         data['states'][i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
 
-    return render_template('state.html', states=data.get("states",[]), token=token)
+    return render_template('state.html', states=data.get("states",[]))
 
 @app.route('/machines')
+@logged_in
 def show_machines():
-    if not is_logged():
-        return redirect(url_for('login'))
-
-    token = request.args.get('access_token', '')
-    if token != ACCESS_TOKEN:
-        return abort(401)
-
     try:
         data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
     except requests.ConnectionError, e:
         return render_template('error.html', error=e)
 
-    return render_template('machines.html', machines=data.get("machines",[]), token=token)
+    return render_template('machines.html', machines=data.get("machines",[]))
 
 @app.route('/units/<name>', methods=['GET', 'PUT', 'DELETE'])
+@logged_in
 def handle_unit(name):
-    if not is_logged():
-        return redirect(url_for('login'))
-
-    token = request.args.get('access_token', '')
-    if token != ACCESS_TOKEN:
-        return abort(401)
-
     if request.method == 'GET':
         try:
             data = requests.get('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name)).json()
@@ -255,7 +254,7 @@ def handle_unit(name):
             abort(404)
 
         unit['service'] = json_to_service_file(data['options'])
-        return render_template('unit.html', unit=unit, token=token)
+        return render_template('unit.html', unit=unit)
     elif request.method == 'PUT':
         # Assembly data to send to API
         json_service = {
