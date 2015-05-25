@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/stupidtable.min.js') }}"></script>
@@ -26,6 +27,7 @@
           <li id="state"><a href="/state?access_token={{ token }}">State</a></li>
           <li id="units"><a href="/units?access_token={{ token }}">Units</a></li>
           <li id="machines"><a href="/machines?access_token={{ token }}">Machines</a></li>
+          <li id="logout" class="pull-right"><a href="/logout?access_token={{ token }}"><span class="glyphicon glyphicon-log-out"></span></a></li>
         </ul>
       </div><!--/.nav-collapse -->
     </div>
