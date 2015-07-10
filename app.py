@@ -182,59 +182,137 @@ def show_dashboard():
 @logged_in
 def show_units():
     # Get units data
+    units = []
     try:
         data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
     except requests.ConnectionError, e:
         return render_template('error.html', error=e)
-    # Get machines data to get IPs matched from IDs
-    machines_data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    machines_ips = {}
-    for machine in machines_data['machines']:
-        machines_ips[machine['id']] = machine['primaryIP']
 
-    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
-    for i in range(len(data.get('units', []))):
-        if 'machineID' in data['units'][i]:
-            machine_id = data['units'][i]['machineID']
-            machine_ip = machines_ips[machine_id]
-            data['units'][i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
-        else: # If there's no machineID, use a single '-', like fleetctl
-            data['units'][i]['machine'] = '-'
+    units += data.get('units', [])
 
-    return render_template('units.html', units=data.get("units", []))
-
-@app.route('/state')
-@logged_in
-def show_state():
-    # Get states data
-    try:
-        data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
-    except requests.ConnectionError, e:
-        return render_template('error.html', error=e)
+    # Handle pagination
+    next_page_token = data.get('nextPageToken')
+    while next_page_token is not None:
+        try:
+            data = requests.get('http://%s/fleet/v1/units?nextPageToken=%s' % (
+                FLEET_ENDPOINT, next_page_token)).json()
+        except requests.ConnectionError, e:
+            return render_template('error.html', error=e)
+        units += data.get('units', [])
+        next_page_token = data.get('nextPageToken')
 
     # Get machines data to get IPs matched from IDs
-    machines_data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    machines_ips = {}
-    for machine in machines_data['machines']:
-        machines_ips[machine['id']] = machine['primaryIP']
-
-    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
-    for i in range(len(data.get('states', []))):
-        machine_id = data['states'][i]['machineID']
-        machine_ip = machines_ips[machine_id]
-        data['states'][i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
-
-    return render_template('state.html', states=data.get("states",[]))
-
-@app.route('/machines')
-@logged_in
-def show_machines():
+    machines = []
     try:
         data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
     except requests.ConnectionError, e:
         return render_template('error.html', error=e)
 
-    return render_template('machines.html', machines=data.get("machines",[]))
+    machines += data.get('machines', [])
+
+    next_page_token = data.get('nextPageToken')
+    while next_page_token is not None:
+        try:
+            data = requests.get('http://%s/fleet/v1/machines?nextPageToken=%s' % (
+                FLEET_ENDPOINT, next_page_token)).json()
+        except requests.ConnectionError, e:
+            return render_template('error.html', error=e)
+        machines += data.get('machines', [])
+        next_page_token = data.get('nextPageToken')
+
+    machines_ips = {}
+    for machine in machines:
+        machines_ips[machine['id']] = machine['primaryIP']
+
+    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
+    for i in range(len(units)):
+        if 'machineID' in units[i]:
+            machine_id = units[i]['machineID']
+            machine_ip = machines_ips[machine_id]
+            units[i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
+        else: # If there's no machineID, use a single '-', like fleetctl
+            units[i]['machine'] = '-'
+
+    return render_template('units.html', units=units)
+
+@app.route('/state')
+@logged_in
+def show_state():
+    # Get state data
+    states = []
+    try:
+        data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
+
+    states += data.get('states', [])
+
+    # Handle pagination
+    next_page_token = data.get('nextPageToken')
+    while next_page_token is not None:
+        try:
+            data = requests.get('http://%s/fleet/v1/state?nextPageToken=%s' % (
+                FLEET_ENDPOINT, next_page_token)).json()
+        except requests.ConnectionError, e:
+            return render_template('error.html', error=e)
+        states += data.get('states', [])
+        next_page_token = data.get('nextPageToken')
+
+    # Get machines data to get IPs matched from IDs
+    machines = []
+    try:
+        data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
+
+    machines += data.get('machines', [])
+
+    next_page_token = data.get('nextPageToken')
+    while next_page_token is not None:
+        try:
+            data = requests.get('http://%s/fleet/v1/machines?nextPageToken=%s' % (
+                FLEET_ENDPOINT, next_page_token)).json()
+        except requests.ConnectionError, e:
+            return render_template('error.html', error=e)
+        machines += data.get('machines', [])
+        next_page_token = data.get('nextPageToken')
+
+    machines_ips = {}
+    for machine in machines:
+        machines_ips[machine['id']] = machine['primaryIP']
+
+    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
+    for i in range(len(states)):
+        machine_id = states[i]['machineID']
+        machine_ip = machines_ips[machine_id]
+        states[i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
+
+    return render_template('state.html', states=states)
+
+@app.route('/machines')
+@logged_in
+def show_machines():
+    # Get machines data
+    machines = []
+    try:
+        data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
+    except requests.ConnectionError, e:
+        return render_template('error.html', error=e)
+
+    machines += data.get('machines', [])
+
+    # Handle pagination
+    next_page_token = data.get('nextPageToken')
+    while next_page_token is not None:
+        try:
+            data = requests.get('http://%s/fleet/v1/machines?nextPageToken=%s' % (
+                FLEET_ENDPOINT, next_page_token)).json()
+        except requests.ConnectionError, e:
+            return render_template('error.html', error=e)
+        machines += data.get('machines', [])
+        next_page_token = data.get('nextPageToken')
+
+    return render_template('machines.html', machines=machines)
 
 @app.route('/units/<name>', methods=['GET', 'PUT', 'DELETE'])
 @logged_in
