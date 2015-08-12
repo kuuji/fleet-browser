@@ -67,6 +67,10 @@ def service_file_to_json(string_service):
                 json_service[-1]['value'] += '\n%s' % line
     return json_service
 
+@app.route('/ping')
+def ping():
+    return 'OK', 200
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
