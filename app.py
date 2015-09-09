@@ -1,12 +1,14 @@
-import requests
+from requests import ConnectionError
 from flask import Flask, request, url_for, render_template, redirect, abort, session
 import os
 import json
 import re
 import pyotp
 from functools import wraps
+from fleet_api import FleetAPI
 
-FLEET_ENDPOINT = os.environ.get('FLEET_ENDPOINT', '172.17.8.101:8080')
+fleet =  FleetAPI(os.environ.get('FLEET_ENDPOINT', '172.17.8.101:8080'))
+
 USERNAME = os.environ.get('USERNAME', 'admin')
 PASSWORD = os.environ.get('PASSWORD', 'admin')
 TOTP_KEY = os.environ.get('TOTP_KEY', None)
@@ -28,44 +30,6 @@ def logged_in(f):
 
         return redirect(url_for('login'))
     return decorated_function
-
-def json_to_service_file(json_service):
-    string_service = ''
-    sections = {}
-    for option in json_service:
-        sections[option['section']] = ''
-    for option in json_service:
-        sections[option['section']] += '%s=%s\n' % (option['name'], option['value'])
-    for section in reversed(sections.keys()):
-        string_service += '[%s]\n%s' % (section, sections[section])
-        string_service += '\n'
-    return string_service
-
-def service_file_to_json(string_service):
-    json_service = []
-    section = None
-    for line in string_service.split('\n'):
-        # Ignore comment lines
-        if len(line) > 0 and line[0] == '#':
-            continue
-
-        # Find section
-        find_section = re.search(r'\[([\w]+)\]', line)
-        if find_section: # If found, start new section
-            section = find_section.group(1)
-        else: # Part of previous found section
-            find_name_value = re.search(r'(.+)\s*=\s*(.+)', line)
-            if find_name_value:
-                name = find_name_value.group(1)
-                value = find_name_value.group(2)
-                json_service.append({
-                    'section': section,
-                    'name': name,
-                    'value': value
-                })
-            else: # Continuation of previous command, like using '\' to split commands
-                json_service[-1]['value'] += '\n%s' % line
-    return json_service
 
 @app.route('/ping')
 def ping():
@@ -119,62 +83,10 @@ def index():
 @logged_in
 def show_dashboard():
     try:
-        units = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json().get("units", [])
-    except requests.ConnectionError, e:
+        units_count = fleet.units_stats()
+        states_count, templates_labels, templates_counts = fleet.states_stats()
+    except Exception, e:
         return render_template('error.html', error=e)
-
-    units_count = {'launched': 0, 'loaded': 0, 'inactive': 0, 'other': 0}
-    # Count states
-    for unit in units:
-        if unit['currentState'] == 'launched':
-            units_count['launched'] += 1
-        elif unit['currentState'] == 'loaded':
-            units_count['loaded'] += 1
-        elif unit['currentState'] == 'inactive':
-            units_count['inactive'] += 1
-        else:
-            units_count['other'] += 1
-
-    states = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json().get("states", [])
-
-    states_count = {'active': 0, 'inactive': 0, 'failed': 0, 'other': 0}
-    templates = {}
-    # Count states
-    for state in states:
-        if state['systemdActiveState'] == 'active':
-            states_count['active'] += 1
-        elif state['systemdActiveState'] == 'failed':
-            states_count['failed'] += 1
-        elif state['systemdActiveState'] == 'inactive':
-            states_count['inactive'] += 1
-        else:
-            states_count['other'] += 1
-
-        # Initialize templates dictionaries
-        template_name = state['name'].split('@')[0]
-        templates[template_name] = {'active': 0, 'inactive': 0, 'failed': 0, 'other': 0}
-
-    # Count states per template
-    for state in states:
-        template_name = state['name'].split('@')[0]
-        if state['systemdActiveState'] == 'active':
-            templates[template_name]['active'] += 1
-        elif state['systemdActiveState'] == 'failed':
-            templates[template_name]['failed'] += 1
-        elif state['systemdActiveState'] == 'inactive':
-            templates[template_name]['inactive'] += 1
-        else:
-            templates[template_name]['other'] += 1
-
-    # Transform data to be used by Highcharts
-    templates_labels = sorted(templates.keys())
-    templates_counts = [{'name': 'active', 'data': [], 'color': 'red'}, {'name': 'inactive', 'data': []},
-                        {'name': 'failed', 'data': []}, {'name': 'other', 'data': []}]
-    for label in templates_labels:
-        templates_counts[0]['data'].append(templates[label]['active'])
-        templates_counts[1]['data'].append(templates[label]['inactive'])
-        templates_counts[2]['data'].append(templates[label]['failed'])
-        templates_counts[3]['data'].append(templates[label]['other'])
 
     return render_template('dashboard.html',
                            states_count=states_count,
@@ -185,57 +97,11 @@ def show_dashboard():
 @app.route('/units')
 @logged_in
 def show_units():
-    # Get units data
-    units = []
+    # Get units data augmented with machines IPs to look like fleetctl output
     try:
-        data = requests.get('http://%s/fleet/v1/units' % FLEET_ENDPOINT).json()
-    except requests.ConnectionError, e:
+        units = fleet.units(with_machines_ips=True)
+    except Exception, e:
         return render_template('error.html', error=e)
-
-    units += data.get('units', [])
-
-    # Handle pagination
-    next_page_token = data.get('nextPageToken')
-    while next_page_token is not None:
-        try:
-            data = requests.get('http://%s/fleet/v1/units?nextPageToken=%s' % (
-                FLEET_ENDPOINT, next_page_token)).json()
-        except requests.ConnectionError, e:
-            return render_template('error.html', error=e)
-        units += data.get('units', [])
-        next_page_token = data.get('nextPageToken')
-
-    # Get machines data to get IPs matched from IDs
-    machines = []
-    try:
-        data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    except requests.ConnectionError, e:
-        return render_template('error.html', error=e)
-
-    machines += data.get('machines', [])
-
-    next_page_token = data.get('nextPageToken')
-    while next_page_token is not None:
-        try:
-            data = requests.get('http://%s/fleet/v1/machines?nextPageToken=%s' % (
-                FLEET_ENDPOINT, next_page_token)).json()
-        except requests.ConnectionError, e:
-            return render_template('error.html', error=e)
-        machines += data.get('machines', [])
-        next_page_token = data.get('nextPageToken')
-
-    machines_ips = {}
-    for machine in machines:
-        machines_ips[machine['id']] = machine['primaryIP']
-
-    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
-    for i in range(len(units)):
-        if 'machineID' in units[i]:
-            machine_id = units[i]['machineID']
-            machine_ip = machines_ips[machine_id]
-            units[i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
-        else: # If there's no machineID, use a single '-', like fleetctl
-            units[i]['machine'] = '-'
 
     return render_template('units.html', units=units)
 
@@ -243,53 +109,10 @@ def show_units():
 @logged_in
 def show_state():
     # Get state data
-    states = []
     try:
-        data = requests.get('http://%s/fleet/v1/state' % FLEET_ENDPOINT).json()
-    except requests.ConnectionError, e:
+        states = fleet.states(with_machines_ips=True)
+    except Exception, e:
         return render_template('error.html', error=e)
-
-    states += data.get('states', [])
-
-    # Handle pagination
-    next_page_token = data.get('nextPageToken')
-    while next_page_token is not None:
-        try:
-            data = requests.get('http://%s/fleet/v1/state?nextPageToken=%s' % (
-                FLEET_ENDPOINT, next_page_token)).json()
-        except requests.ConnectionError, e:
-            return render_template('error.html', error=e)
-        states += data.get('states', [])
-        next_page_token = data.get('nextPageToken')
-
-    # Get machines data to get IPs matched from IDs
-    machines = []
-    try:
-        data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    except requests.ConnectionError, e:
-        return render_template('error.html', error=e)
-
-    machines += data.get('machines', [])
-
-    next_page_token = data.get('nextPageToken')
-    while next_page_token is not None:
-        try:
-            data = requests.get('http://%s/fleet/v1/machines?nextPageToken=%s' % (
-                FLEET_ENDPOINT, next_page_token)).json()
-        except requests.ConnectionError, e:
-            return render_template('error.html', error=e)
-        machines += data.get('machines', [])
-        next_page_token = data.get('nextPageToken')
-
-    machines_ips = {}
-    for machine in machines:
-        machines_ips[machine['id']] = machine['primaryIP']
-
-    # Transform machine ID into machine string: hash => simple_hash.../machine_IP
-    for i in range(len(states)):
-        machine_id = states[i]['machineID']
-        machine_ip = machines_ips[machine_id]
-        states[i]['machine'] = '%s.../%s' % (machine_id[0:8], machine_ip)
 
     return render_template('state.html', states=states)
 
@@ -297,24 +120,10 @@ def show_state():
 @logged_in
 def show_machines():
     # Get machines data
-    machines = []
     try:
-        data = requests.get('http://%s/fleet/v1/machines' % FLEET_ENDPOINT).json()
-    except requests.ConnectionError, e:
+        machines = fleet.machines(with_machines_ips=False)
+    except Exception, e:
         return render_template('error.html', error=e)
-
-    machines += data.get('machines', [])
-
-    # Handle pagination
-    next_page_token = data.get('nextPageToken')
-    while next_page_token is not None:
-        try:
-            data = requests.get('http://%s/fleet/v1/machines?nextPageToken=%s' % (
-                FLEET_ENDPOINT, next_page_token)).json()
-        except requests.ConnectionError, e:
-            return render_template('error.html', error=e)
-        machines += data.get('machines', [])
-        next_page_token = data.get('nextPageToken')
 
     return render_template('machines.html', machines=machines)
 
@@ -323,46 +132,27 @@ def show_machines():
 def handle_unit(name):
     if request.method == 'GET':
         try:
-            data = requests.get('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name)).json()
-        except requests.ConnectionError, e:
+            unit = fleet.get_unit(name)
+        except Exception, e:
             return render_template('error.html', error=e)
 
-        try:
-            unit = {'name': data['name']}
-        except:
+        if unit is None:
             abort(404)
 
-        unit['service'] = json_to_service_file(data['options'])
         return render_template('unit.html', unit=unit)
     elif request.method == 'PUT':
-        # Assembly data to send to API
-        json_service = {
-            'desiredState': request.form.get('desiredState'),
-            'options': service_file_to_json(request.form.get('serviceFile'))
-        }
-        data = json.dumps(json_service)
-        res = requests.put('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name), data=data,
-            headers={'content-type': 'application/json'})
+        try:
+            response_message, status_code = fleet.put_unit(name,
+                request.form.get('serviceFile'), request.form.get('desiredState'))
+        except Exception, e:
+            return render_template('error.html', error=e)
 
-        response_message = 'Failed'
-        if res.status_code == 204:
-            response_message = 'Modified'
-        elif res.status_code == 201:
-            response_message = 'Created'
-        elif res.status_code == 400:
-            response_message = 'Bad request'
-        elif res.status_code == 409:
-            response_message = 'Conflict'
-
-        return response_message, res.status_code
+        return response_message, status_code
     elif request.method == 'DELETE':
-        res = requests.delete('http://%s/fleet/v1/units/%s' % (FLEET_ENDPOINT, name))
-        response_message = 'Failed'
-        status_code = res.status_code
-        if res.status_code == 204:
-            response_message = 'Deleted'
-        elif res.status_code == 404:
-            response_message = 'Not found'
+        try:
+            response_message, status_code = fleet.delete_unit(name)
+        except Exception, e:
+            return render_template('error.html', error=e)
 
         return response_message, status_code
 
